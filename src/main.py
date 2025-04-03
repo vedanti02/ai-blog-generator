@@ -12,42 +12,13 @@ from globals import vector_db
 import logging
 from typing import List, Any
 import traceback
-import sys
-from datetime import datetime
 
 # Configure logging
-def setup_logging():
-    """Configure logging with proper format and level."""
-    # Create a logger
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    
-    # Create console handler with formatting
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
-    
-    # Create formatter
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
-    
-    # Add formatter to handler
-    console_handler.setFormatter(formatter)
-    
-    # Add handler to logger
-    logger.addHandler(console_handler)
-    
-    # Create file handler
-    file_handler = logging.FileHandler(f'app_{datetime.now().strftime("%Y%m%d")}.log')
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-    
-    return logger
-
-# Initialize logging
-logger = setup_logging()
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 class ApplicationError(Exception):
     """Custom exception for application-level errors."""
