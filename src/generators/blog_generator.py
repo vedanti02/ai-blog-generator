@@ -22,7 +22,7 @@ class BlogGenerator:
             logger.error(f"Failed to initialize OpenAI client: {e}")
             raise BlogGenerationError("Failed to initialize blog generator")
 
-    def generate_blogs(self, vector_db, embeddings, keyword: str) -> List[Dict[str, Any]]:
+    def generate_blogs(self, vector_db, keyword: str) -> List[Dict[str, Any]]:
         """
         Generate blog posts with comprehensive error handling.
         
@@ -42,7 +42,7 @@ class BlogGenerator:
             docs = vector_db.get(include=["documents"])["documents"]
             examples = [{"content": doc} for doc in docs]
 
-            context = "\n".join(get_relevant_docs(examples, embeddings, keyword))
+            context = "\n".join(get_relevant_docs(examples, keyword))
             if not context:
                 logger.warning(f"No relevant context found for keyword: {keyword}")
                 raise BlogGenerationError("No relevant context found for the given keyword")

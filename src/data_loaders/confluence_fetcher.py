@@ -1,6 +1,7 @@
-import settings.config as config
 from datetime import datetime, timedelta
+from dateutil import parser  # Handle flexible datetime parsing
 from langchain_community.document_loaders import ConfluenceLoader
+import settings.config as config
 import logging
 
 # Configure logging
@@ -9,8 +10,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-seven_days_ago = (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 CONFLUENCE_CREDENTIALS = {
     "url":config.CONFLUENCE_URL,

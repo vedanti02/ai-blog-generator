@@ -24,7 +24,7 @@ class ApplicationError(Exception):
     """Custom exception for application-level errors."""
     pass
 
-def run_summary_tasks(slack_docs_general: List[str], slack_docs_support: List[str], confluence_docs: List[Any]) -> None:
+def run_summary_tasks(slack_docs_general: List[str], confluence_docs: List[Any]) -> None:
     """
     Run summary generation and posting tasks.
     
@@ -51,37 +51,18 @@ def run_summary_tasks(slack_docs_general: List[str], slack_docs_support: List[st
             <h3>Confluence Summary</h3>
             <p>{confluence_summary}</p>
             """
-
-        # Support summary
-        logger.info("Generating support summary")
-        slack_support_summary = generate_summary(slack_docs_support, "Slack")
-        formatted_support_summary = f"""
-                <h3>Slack Summary</h3>
-                <p>{slack_support_summary}</p>
-            """
-        logger.info("Successfully generated support summary")
         
         # Schedule the tasks
         def post_summary():
             try:
                 logger.info("Posting general summary to Confluence")
-                append_to_confluence_page(formatted_summary, "4423704")
+                append_to_confluence_page(formatted_summary, "69959681")
                 logger.info("Successfully posted general summary")
             except Exception as e:
                 logger.error(f"Failed to post general summary: {e}")
                 logger.error(traceback.format_exc())
-        
-        def post_support_summary():
-            try:
-                logger.info("Posting support summary to Confluence")
-                append_to_confluence_page(formatted_support_summary, "5013506")
-                logger.info("Successfully posted support summary")
-            except Exception as e:
-                logger.error(f"Failed to post support summary: {e}")
-                logger.error(traceback.format_exc())
 
-        schedule.every(60).seconds.do(post_summary)
-        schedule.every(60).seconds.do(post_support_summary)
+        schedule.every(200).seconds.do(post_summary)
         logger.info("Scheduled summary posting tasks")
 
         while True:
@@ -111,13 +92,12 @@ def main():
         # Fetch and process documents
         logger.info("Fetching Slack messages")
         slack_docs_general = fetch_slack_messages(config.SLACK_CHANNEL_ID, config.SLACK_BOT_TOKEN)
-        slack_docs_support = fetch_slack_messages(config.SLACK_CHANNEL_ID, config.SLACK_BOT_TOKEN_SUPPORT)
-        logger.info(f"Fetched {len(slack_docs_general)} general messages and {len(slack_docs_support)} support messages")
+        logger.info(f"Fetched {len(slack_docs_general)} general messages")
 
         logger.info("Fetching Confluence data")
         confluence_docs = fetch_confluence_data()
         logger.info(f"Fetched {len(confluence_docs)} Confluence documents")
-
+        confluence_docs = confluence_docs[:5]
         logger.info("Processing and combining documents")
         combined_docs = slack_docs_general + confluence_docs
         combined_docs_final = [remove_bot_mentions(doc) for doc in combined_docs]
@@ -131,7 +111,7 @@ def main():
         logger.info("Starting summary thread")
         summary_thread = threading.Thread(
             target=run_summary_tasks,
-            args=(slack_docs_general, slack_docs_support, confluence_docs)
+            args=(slack_docs_general, confluence_docs)
         )
         summary_thread.daemon = True
         summary_thread.start()

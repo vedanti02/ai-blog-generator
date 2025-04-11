@@ -15,7 +15,9 @@ def store_data_vectordb(combined_docs, vector_db):
             Document(page_content=doc) if isinstance(doc, str) else doc
             for doc in (combined_docs)
         ]
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=70)
+        
+        # Use smaller chunk size to reduce the number of documents
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
         split_docs = text_splitter.split_documents(combined_docs_final)
         
         # Store in ChromaDB

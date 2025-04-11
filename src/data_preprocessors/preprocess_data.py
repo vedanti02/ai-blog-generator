@@ -49,3 +49,24 @@ def remove_duplicate_documents(documents):
             unique_docs.append(doc)
     
     return unique_docs
+
+def clean_newlines(documents):
+    """Clean up extra newlines in each document, keeping only single newlines between paragraphs."""
+    if not documents:
+        return []
+    
+    cleaned_docs = []
+    for doc in documents:
+        # Convert to string if not already
+        text = str(doc)
+        
+        # Replace multiple newlines with a single newline
+        text = re.sub(r'\n{3,}', '\n\n', text)
+            # Remove bot mentions (e.g., <@BOT_ID>)
+        text = re.sub(r'<@[^>]+>', '', text)
+        # Remove any leading or trailing newlines
+        text = text.strip('\n')
+        
+        cleaned_docs.append(text)
+    
+    return cleaned_docs

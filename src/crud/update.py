@@ -1,5 +1,6 @@
 from langchain.schema import Document
 import logging
+from globals import vector_db
 
 # Configure logging
 logging.basicConfig(
@@ -8,7 +9,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def update_data(from_text, to_text, vector_db, embeddings):
+def update_data(from_text, to_text, vector_db):
     try:
         results = vector_db.similarity_search(from_text, k=1)
         if results:
