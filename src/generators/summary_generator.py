@@ -3,8 +3,8 @@ import settings.config as config
 import time
 from typing import List
 
-def chunk_text(text_list: List[str], max_chunk_size: int = 3000) -> List[str]:
-    """Split text into smaller chunks to avoid token limits."""
+def chunk_text(text_list: List[str], max_chunk_size: int = 2000) -> List[str]:
+    """Split text into smaller chunks to optimize token usage and costs."""
     chunks = []
     current_chunk = []
     current_size = 0
@@ -26,10 +26,14 @@ def chunk_text(text_list: List[str], max_chunk_size: int = 3000) -> List[str]:
     return chunks
 
 def generate_summary(text_list: List[str], source_name: str, max_retries: int = 3) -> str:
-    """Generate a summary with rate limit handling and retries."""
-    llm = ChatOpenAI(model_name="gpt-4", temperature=0.7, openai_api_key=config.OPEN_API_KEY)
+    """Generate a summary with optimized token usage and cost efficiency."""
+    llm = ChatOpenAI(
+        model_name="gpt-4",
+        temperature=0.7,
+        openai_api_key=config.OPEN_API_KEY
+    )
     
-    # Split text into manageable chunks
+    # Split text into smaller chunks for cost efficiency
     chunks = chunk_text(text_list)
     summaries = []
     
@@ -37,7 +41,8 @@ def generate_summary(text_list: List[str], source_name: str, max_retries: int = 
         retries = 0
         while retries < max_retries:
             try:
-                prompt = f"Summarize the following {source_name} data:\n\n{chunk}"
+                # Efficient prompt that focuses on key points
+                prompt = f"""Summarize this {source_name} data in 2-3 sentences, focusing on key insights: {chunk}"""
                 summary = llm.predict(prompt)
                 summaries.append(summary)
                 break
@@ -45,7 +50,7 @@ def generate_summary(text_list: List[str], source_name: str, max_retries: int = 
                 if "rate_limit_exceeded" in str(e):
                     retries += 1
                     if retries < max_retries:
-                        wait_time = 20 ** retries  # Exponential backoff
+                        wait_time = 20 ** retries
                         print(f"Rate limit hit, waiting {wait_time} seconds before retry...")
                         time.sleep(wait_time)
                     else:
@@ -56,9 +61,11 @@ def generate_summary(text_list: List[str], source_name: str, max_retries: int = 
                     summaries.append("(Summary unavailable due to error)")
                     break
     
-    # Combine all chunk summaries
+    # Combine summaries efficiently
     if summaries:
-        final_prompt = f"Combine these summaries into a coherent whole:\n\n{' '.join(summaries)}"
+        final_prompt = f"""Combine these summaries into a single coherent paragraph:
+
+        {' '.join(summaries)}"""
         try:
             return llm.predict(final_prompt)
         except Exception as e:

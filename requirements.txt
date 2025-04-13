@@ -21,3 +21,4 @@ langchain-chroma>=0.0.5
 fastapi>=0.109.0
 uvicorn>=0.27.0
 pydantic>=2.6.0
+sentence-transformers>=2.2.0

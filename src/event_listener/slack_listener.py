@@ -3,11 +3,11 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 from settings import config
 from src.crud.get import get_data
 from src.crud.update import update_data
-from globals import vector_db, embeddings, keyword_storage
+from globals import vector_db, keyword_storage
 from src.generators.blog_generator import BlogGenerationError, BlogGenerator
 from src.chatbot.support_bot import SupportBot
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ def handle_blog_command(ack, respond, command):
         logger.info(f"Blog generation started for {keyword}")
         
         try:
-            blog_generator.generate_blogs(vector_db, embeddings, keyword=keyword)
+            blog_generator.generate_blogs(vector_db, keyword=keyword)
         except BlogGenerationError as e:
             handle_error(e, respond)
         except Exception as e:
@@ -93,7 +93,15 @@ def handle_get_command(ack, respond, command):
         respond(f"Getting information for: *{sentence}*")
         try:
             results = get_data(sentence, vector_db)
-            respond(f"Results for *{sentence}: *{results}")
+            if not results:
+                respond("No relevant information found.")
+                return
+
+            formatted_results = "\n\n".join(
+                [f"{doc.strip()}" for doc in results]
+            )
+            
+            respond(f"*Results for:* `{sentence}`\n\n{formatted_results}")
         except Exception as e:
             handle_error(e, respond)
             
@@ -145,7 +153,7 @@ def handle_submission(ack, body, client):
             raise ValueError("Both 'From' and 'To' fields are required")
 
         try:
-            update_data(from_text, to_text, vector_db, embeddings)
+            update_data(from_text, to_text, vector_db)
             updated_text = f"Replaced *{from_text}* with *{to_text}*"
             client.chat_postMessage(channel=config.SLACK_CHANNEL_ID, text=updated_text)
         except Exception as e:

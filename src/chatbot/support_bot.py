@@ -3,11 +3,20 @@ from langchain_openai import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
-import os
+import logging
 from settings import config
 from dotenv import load_dotenv
+from globals import vector_db
+from src.utils.ContextAwareMemory import ContextAwareMemory
 
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 class SupportBot:
     def __init__(self):
@@ -16,54 +25,31 @@ class SupportBot:
             model="gpt-4-turbo-preview",
             openai_api_key=config.OPEN_API_KEY
         )
-        self.memory = ConversationBufferMemory()
+        self.memory = ContextAwareMemory()
         
-        # Enhanced prompt template with more context about Remido
-        template = """You are a knowledgeable support assistant for Remido, a financial technology company specializing in remittance and payment solutions. 
-        You have access to the following conversation history:
+        # Enhanced prompt template with vector DB context
+        template = """You are a Remido support assistant (fintech/remittance).
         
         {history}
         
-        Important Context about Remido:
-        1. Core Services:
-           - Remittance services for international money transfers
-           - Payment processing solutions
-           - Financial technology integration
-           - Cross-border payment capabilities
+        Services: Int'l transfers, payments, fintech integration
+        Features: Real-time tracking, multi-currency, secure API
+        Users: Businesses, individuals, financial institutions
         
-        2. Key Features:
-           - Real-time transaction tracking
-           - Multi-currency support
-           - Secure payment processing
-           - API integration capabilities
-           - Compliance with international financial regulations
+        Relevant Context:
+        {context}
         
-        3. Target Users:
-           - Businesses requiring international payment solutions
-           - Individuals sending money abroad
-           - Financial institutions
-           - E-commerce platforms
-        
-        4. Technical Capabilities:
-           - RESTful API integration
-           - Webhook support
-           - Multi-language support
-           - 24/7 transaction monitoring
-        
-        Guidelines for Responses:
-        1. Be professional and friendly
-        2. Provide specific, actionable information
-        3. Include relevant technical details when appropriate
-        4. Maintain context from previous questions
-        5. If unsure about specific details, acknowledge limitations
-        6. Use bullet points for multiple features or steps
-        7. Include examples when relevant
+        Guidelines:
+        - Be concise and professional
+        - Focus on solutions
+        - Use bullet points
+        - Provide examples when needed
         
         Human: {input}
         Assistant:"""
         
         prompt = PromptTemplate(
-            input_variables=["history", "input"],
+            input_variables=["history", "input", "context"],
             template=template
         )
         
@@ -74,12 +60,30 @@ class SupportBot:
             verbose=True
         )
     
+    def _get_relevant_context(self, query: str) -> str:
+        """Get relevant context from vector database."""
+        try:
+            results = vector_db.similarity_search(query, k=3)
+            context = "\n".join([doc.page_content for doc in results])
+            return context
+        except Exception as e:
+            logger.error(f"Error fetching context: {str(e)}")
+            return ""
+    
     def get_response(self, user_input: str) -> str:
         """Get a response from the bot while maintaining conversation history."""
         try:
-            response = self.conversation.predict(input=user_input)
+            # Get relevant context from vector DB
+            context = self._get_relevant_context(user_input)
+            
+            # Get response with context
+            response = self.conversation.run(
+                input=user_input,
+                context=context
+            )
             return response
         except Exception as e:
+            logger.error(f"Error generating response: {str(e)}")
             return f"I apologize, but I encountered an error: {str(e)}"
     
     def clear_history(self):
