@@ -1,5 +1,4 @@
-from datetime import datetime, timedelta
-from dateutil import parser  # Handle flexible datetime parsing
+from datetime import datetime, timedelta, timezone
 from langchain_community.document_loaders import ConfluenceLoader
 import settings.config as config
 import logging
@@ -29,11 +28,19 @@ def fetch_confluence_data():
             logger.warning("No Confluence data found.")
             return []
 
-        #fetch docs from last 7 days
-        recent_docs = [
-            doc for doc in confluence_docs 
-            # if "lastModified" in doc.metadata and datetime.strptime(doc.metadata["lastModified"], "%Y-%m-%dT%H:%M:%S.%f%z") >= seven_days_ago
-        ]
+        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+
+        recent_docs = []
+        for doc in confluence_docs:
+            modified = doc.metadata.get("when")
+            if modified:
+                try:
+                    modified_date = datetime.strptime(modified, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
+                    if modified_date >= seven_days_ago:
+                        recent_docs.append(doc)
+                except ValueError as ve:
+                    logger.warning(f"Failed to parse date: {modified} ({ve})")
+
         return recent_docs
 
     except Exception as e:

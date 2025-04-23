@@ -97,7 +97,6 @@ def main():
         logger.info("Fetching Confluence data")
         confluence_docs = fetch_confluence_data()
         logger.info(f"Fetched {len(confluence_docs)} Confluence documents")
-        confluence_docs = confluence_docs[:5]
         logger.info("Processing and combining documents")
         combined_docs = slack_docs_general + confluence_docs
         combined_docs_final = [remove_bot_mentions(doc) for doc in combined_docs]
