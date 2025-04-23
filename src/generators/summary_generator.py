@@ -28,7 +28,7 @@ def chunk_text(text_list: List[str], max_chunk_size: int = 2000) -> List[str]:
 def generate_summary(text_list: List[str], source_name: str, max_retries: int = 3) -> str:
     """Generate a summary with optimized token usage and cost efficiency."""
     llm = ChatOpenAI(
-        model_name="gpt-4",
+        model_name="gpt-4o",
         temperature=0.7,
         openai_api_key=config.OPEN_API_KEY
     )

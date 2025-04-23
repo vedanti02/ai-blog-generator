@@ -22,7 +22,7 @@ class SupportBot:
     def __init__(self):
         self.llm = ChatOpenAI(
             temperature=0.7,
-            model="gpt-4-turbo-preview",
+            model="gpt-4o",
             openai_api_key=config.OPEN_API_KEY
         )
         self.memory = ContextAwareMemory()
