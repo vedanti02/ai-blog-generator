@@ -3,6 +3,8 @@
 ## Overview
 The Blog Generation Bot is an AI-powered system that automatically generates, manages, and publishes blog content based on data from various sources including Slack conversations and Confluence documents. The system uses advanced language models and vector databases to create engaging, relevant content.
 
+Execution video: https://youtu.be/tQbfRkcWh00
+
 ## System Architecture
 
 ### Core Components
